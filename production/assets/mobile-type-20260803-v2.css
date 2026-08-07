@@ -1,0 +1,10 @@
+/* Keep mobile hero and section headings within phone-sized viewports. */
+@media (max-width: 520px) {
+  .hero h1 {
+    font-size: clamp(2.5rem, 14vw, 3.5rem);
+  }
+
+  h2 {
+    font-size: clamp(2.2rem, 12vw, 3rem);
+  }
+}

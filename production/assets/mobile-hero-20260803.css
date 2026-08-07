@@ -1,0 +1,6 @@
+/* Keep Michael's face clear of the hero copy on phone-sized screens. */
+@media (max-width: 520px) {
+  .hero h1 {
+    font-size: clamp(2.5rem, 14vw, 3.5rem);
+  }
+}
