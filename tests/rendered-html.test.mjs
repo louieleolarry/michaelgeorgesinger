@@ -39,6 +39,26 @@ test("server-renders the Michael George artist homepage", async () => {
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/i);
 });
 
+test("renders a data-driven video grid with filter + show-more controls", async () => {
+  const html = await (await render()).text();
+
+  // The dynamic browser renders the default page of video cards…
+  assert.match(html, /class="videoCard"/);
+  // …plus the sort/filter controls and the lazy-load affordance.
+  assert.match(html, /Search videos or tags/);
+  assert.match(html, /Newest first/);
+  assert.match(html, /Show more/);
+});
+
+test("opens external links in a new tab", async () => {
+  const html = await (await render()).text();
+  // Every external anchor should carry target=_blank + rel=noopener.
+  assert.match(html, /href="https:\/\/www\.youtube\.com\/@MichaelGeorge74"[^>]*target="_blank"/);
+  assert.match(html, /rel="noopener noreferrer"/);
+  // Internal anchors must NOT open a new tab.
+  assert.doesNotMatch(html, /href="#dates"[^>]*target="_blank"/);
+});
+
 test("includes every requested official social destination", async () => {
   const html = await (await render()).text();
 
@@ -61,7 +81,6 @@ test("uses bundled artist imagery in the page source", async () => {
   ]);
 
   assert.match(page, /michael-facebook-profile\.jpg/);
-  assert.match(page, /video-dlaly\.jpg/);
-  assert.match(css, /michael-youtube-avatar\.jpg/);
+  assert.match(css, /hero-gulbareh\.jpg/);
   assert.match(layout, /michael-facebook-profile\.jpg/);
 });

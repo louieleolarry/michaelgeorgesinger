@@ -42,6 +42,24 @@ const worker = {
 
     return handler.fetch(request, env, ctx);
   },
+
+  // Cron-triggered WebSub lease renewal. Requires a cron trigger (~every 4
+  // days) configured at deploy time. No-op until the first subscribe stores a
+  // callback URL.
+  async scheduled(_event: unknown, _env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(
+      // Lazy import: keeps the Cloudflare-only dependency out of top-level module
+      // load so the worker bundle still imports under plain Node (tests).
+      (async () => {
+        try {
+          const { renewSubscription } = await import("../app/lib/websub");
+          await renewSubscription();
+        } catch {
+          // best-effort; the next tick retries
+        }
+      })()
+    );
+  },
 };
 
 export default worker;

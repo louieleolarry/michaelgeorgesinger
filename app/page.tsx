@@ -1,74 +1,68 @@
+import VideoBrowser, { type VideoCardData } from "./components/VideoBrowser";
+import { cleanTitle, formatYear, watchUrl } from "./lib/format";
+import seed from "./lib/videos-seed.json";
+
+// Reads the video catalog from D1 per request (falls back to a bundled seed
+// when D1 is empty/unavailable, e.g. before the first backfill or in local dev).
+export const dynamic = "force-dynamic";
+
+// Opens external links in a new tab, safely.
+const ext = { target: "_blank", rel: "noopener noreferrer" } as const;
+
 const socialLinks = [
-  {
-    label: "YouTube",
-    href: "https://www.youtube.com/@MichaelGeorge74",
-    note: "Official videos",
-  },
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/michaelgeorge74/",
-    note: "Photos and clips",
-  },
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/michael.george.50702/",
-    note: "Community updates",
-  },
-  {
-    label: "Qeenatha",
-    href: "https://qeenatha.com/artist/4568",
-    note: "Music profile",
-  },
-  {
-    label: "TikTok",
-    href: "https://www.tiktok.com/@michael.george.official",
-    note: "Short videos",
-  },
+  { label: "YouTube", href: "https://www.youtube.com/@MichaelGeorge74", note: "Official videos", iconClass: "socialIcon--youtube" },
+  { label: "Instagram", href: "https://www.instagram.com/michaelgeorge74/", note: "Photos and clips", iconClass: "socialIcon--instagram" },
+  { label: "Facebook", href: "https://www.facebook.com/michael.george.50702/", note: "Community updates", iconClass: "socialIcon--facebook" },
+  { label: "Qeenatha", href: "https://qeenatha.com/artist/4568", note: "Music profile", iconClass: "socialIcon--qeenatha" },
+  { label: "TikTok", href: "https://www.tiktok.com/@michael.george.official", note: "Short videos", iconClass: "socialIcon--tiktok" },
 ];
 
 const contactEmail = "info@michaelgeorgesinger.com";
 const contactHref = `mailto:${contactEmail}`;
+const youtubeChannel = "https://www.youtube.com/@MichaelGeorge74";
 
-const videos = [
-  {
-    title: "Michael George (DLALY)",
-    year: "2026",
-    image: "/media/video-dlaly.jpg",
-    href: "https://www.youtube.com/watch?v=lkWx6CgbHlI",
-  },
-  {
-    title: "T'Khoron Yomaneh",
-    year: "2026",
-    image: "/media/video-tkhoron.jpg",
-    href: "https://www.youtube.com/watch?v=NgYro4IlBqI",
-  },
-  {
-    title: "Khliminwa",
-    year: "2025",
-    image: "/media/video-khliminwa.jpg",
-    href: "https://www.youtube.com/watch?v=od407Hy3YBw",
-  },
-  {
-    title: "Brata",
-    year: "2025",
-    image: "/media/video-brata.jpg",
-    href: "https://www.youtube.com/watch?v=x_VeL_a7qx8",
-  },
-  {
-    title: "Gulbareh",
-    year: "2025",
-    image: "/media/video-gulbareh.jpg",
-    href: "https://www.youtube.com/watch?v=iP-t_q3rBNE",
-  },
-  {
-    title: "Keka",
-    year: "2025",
-    image: "/media/video-keka.jpg",
-    href: "https://www.youtube.com/watch?v=BS8Su7Az_-U",
-  },
-];
+interface RawVideo {
+  id: string;
+  title: string;
+  publishedAt: string;
+  thumbnail: string;
+  tags: string[];
+  viewCount: number;
+}
 
-export default function Home() {
+function toCard(v: RawVideo): VideoCardData {
+  return {
+    id: v.id,
+    title: cleanTitle(v.title),
+    year: formatYear(v.publishedAt),
+    thumbnail: v.thumbnail,
+    url: watchUrl(v.id),
+    tags: v.tags ?? [],
+    views: v.viewCount ?? 0,
+    publishedAt: v.publishedAt,
+  };
+}
+
+async function loadCards(): Promise<VideoCardData[]> {
+  let raw: RawVideo[] = [];
+  try {
+    // Lazy import so the Cloudflare-only `cloudflare:workers` dependency isn't
+    // pulled into module load (keeps the Node-based render test working; it
+    // simply falls back to the seed below).
+    const { getAllVideos } = await import("./lib/videos-repo");
+    const rows = await getAllVideos();
+    if (rows.length) raw = rows as unknown as RawVideo[];
+  } catch {
+    // D1 binding/table not available (e.g. local dev before migration) — seed below
+  }
+  if (raw.length === 0) raw = seed as unknown as RawVideo[];
+  return raw.map(toCard);
+}
+
+export default async function Home() {
+  const cards = await loadCards();
+  const featured = cards[0];
+
   return (
     <main>
       <section className="hero" id="top">
@@ -94,7 +88,7 @@ export default function Home() {
             information from Michael George.
           </p>
           <div className="heroActions" aria-label="Featured actions">
-            <a className="button primary" href="https://www.youtube.com/@MichaelGeorge74">
+            <a className="button primary" href={youtubeChannel} {...ext}>
               Watch on YouTube
             </a>
             <a className="button secondary" href="#dates">
@@ -109,33 +103,37 @@ export default function Home() {
 
       <section className="socialStrip" id="socials" aria-label="Official social links">
         {socialLinks.map((link) => (
-          <a key={link.label} href={link.href} className="socialLink">
-            <span>{link.label}</span>
+          <a key={link.label} href={link.href} className="socialLink" {...ext}>
+            <span className={`socialIcon ${link.iconClass}`} aria-hidden="true" />
+            <span className="socialText">{link.label}</span>
             <small>{link.note}</small>
           </a>
         ))}
       </section>
 
-      <section className="featureBand">
-        <div className="featureCopy">
-          <p className="eyebrow dark">Latest release</p>
-          <h2>DLALY</h2>
-          <p>
-            The newest upload on Michael&apos;s official channel leads the page,
-            with the rest of the video catalog close behind for fast listening.
-          </p>
-          <a className="textLink" href="https://www.youtube.com/watch?v=lkWx6CgbHlI">
-            Play the latest video
+      {featured && (
+        <section className="featureBand">
+          <div className="featureCopy">
+            <p className="eyebrow dark">Latest release</p>
+            <h2>{featured.title}</h2>
+            <p>
+              The newest upload on Michael&apos;s official channel leads the page,
+              with the rest of the video catalog close behind for fast listening.
+            </p>
+            <a className="textLink" href={featured.url} {...ext}>
+              Play the latest video
+            </a>
+          </div>
+          <a
+            className="featureImage"
+            href={featured.url}
+            aria-label={`Watch ${featured.title} on YouTube`}
+            {...ext}
+          >
+            <img src={featured.thumbnail} alt={`${featured.title} video thumbnail`} />
           </a>
-        </div>
-        <a
-          className="featureImage"
-          href="https://www.youtube.com/watch?v=lkWx6CgbHlI"
-          aria-label="Watch Michael George DLALY on YouTube"
-        >
-          <img src="/media/video-dlaly.jpg" alt="Michael George DLALY video thumbnail" />
-        </a>
-      </section>
+        </section>
+      )}
 
       <section className="videoSection" id="videos">
         <div className="sectionIntro">
@@ -146,15 +144,7 @@ export default function Home() {
             wall so fans can move from one song to the next.
           </p>
         </div>
-        <div className="videoGrid">
-          {videos.map((video) => (
-            <a className="videoCard" key={video.href} href={video.href}>
-              <img src={video.image} alt={`${video.title} video thumbnail`} />
-              <span className="videoMeta">{video.year}</span>
-              <strong>{video.title}</strong>
-            </a>
-          ))}
-        </div>
+        <VideoBrowser videos={cards} />
       </section>
 
       <section className="datesBand" id="dates">
@@ -183,7 +173,8 @@ export default function Home() {
           </p>
           <div className="miniLinks">
             {socialLinks.map((link) => (
-              <a key={link.label} href={link.href}>
+              <a key={link.label} href={link.href} {...ext}>
+                <span className={`miniSocialIcon ${link.iconClass}`} aria-hidden="true" />
                 {link.label}
               </a>
             ))}

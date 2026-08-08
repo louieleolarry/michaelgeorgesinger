@@ -1,0 +1,14 @@
+# Copy to `.dev.vars` (gitignored) for local dev, and set the same as Worker
+# secrets in production (`wrangler secret put <NAME>` or the Sites dashboard).
+
+# YouTube Data API v3 key — create in Google Cloud Console (any project; channel
+# ownership NOT required for public data). Enables backfill + upload enrichment.
+YOUTUBE_API_KEY=
+
+# Shared secret for verifying WebSub push signatures (X-Hub-Signature). Any long
+# random string; must match what we send the hub at subscribe time.
+WEBSUB_SECRET=
+
+# Bearer token guarding the admin routes (/youtube/backfill, /youtube/subscribe).
+# Any long random string.
+ADMIN_TOKEN=
