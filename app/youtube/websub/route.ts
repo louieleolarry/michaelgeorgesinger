@@ -35,7 +35,8 @@ export async function POST(request: Request): Promise<Response> {
   if (!valid) return new Response("Invalid signature", { status: 202 });
 
   const ids = parseAtomVideoIds(rawBody);
-  if (ids.length === 0) return new Response("No entries", { status: 204 });
+  // 204 responses must not carry a body (constructing one with a body throws).
+  if (ids.length === 0) return new Response(null, { status: 204 });
 
   try {
     const videos = await fetchVideosByIds(ids);
@@ -44,5 +45,5 @@ export async function POST(request: Request): Promise<Response> {
     // Swallow: acknowledge the push so the hub doesn't hammer us; the next
     // push or a backfill will reconcile.
   }
-  return new Response("OK", { status: 204 });
+  return new Response(null, { status: 204 });
 }

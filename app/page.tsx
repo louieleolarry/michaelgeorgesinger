@@ -1,4 +1,5 @@
 import VideoBrowser, { type VideoCardData } from "./components/VideoBrowser";
+import YouTubeModal from "./components/YouTubeModal";
 import { cleanTitle, formatYear, watchUrl } from "./lib/format";
 import seed from "./lib/videos-seed.json";
 
@@ -64,6 +65,7 @@ export default async function Home() {
   const featured = cards[0];
 
   return (
+    <>
     <main>
       <section className="hero" id="top">
         <div className="heroPhoto" aria-hidden="true" />
@@ -183,5 +185,7 @@ export default async function Home() {
         </div>
       </section>
     </main>
+    <YouTubeModal />
+    </>
   );
 }
