@@ -1,0 +1,14 @@
+{
+  "_comment": "Production Cloudflare deploy settings that vinext's build does NOT emit. Applied to dist/server/wrangler.json by deploy/patch-wrangler.mjs (run via `npm run deploy`). These are identifiers, not secrets — secrets live in Worker secrets / .dev.vars.",
+  "worker_name": "michaelgeorgesinger-com",
+  "d1": {
+    "binding": "DB",
+    "database_name": "michaelgeorgesinger",
+    "database_id": "fbcfae95-75b2-47f9-84f2-2b4a3352af15"
+  },
+  "routes": [
+    { "pattern": "michaelgeorgesinger.com/*", "zone_name": "michaelgeorgesinger.com" },
+    { "pattern": "www.michaelgeorgesinger.com/*", "zone_name": "michaelgeorgesinger.com" }
+  ],
+  "triggers": { "crons": ["0 3 */4 * *"] }
+}
